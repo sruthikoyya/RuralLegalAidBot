@@ -1,0 +1,35 @@
+# Environment - contains your secret API keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+
+# Data directories - too large for GitHub
+data/chroma_db/
+data/temp/
+data/legal_docs/
+
+# ML model files - too large (GBs)
+*.gguf
+*.bin
+*.pt
+*.safetensors
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

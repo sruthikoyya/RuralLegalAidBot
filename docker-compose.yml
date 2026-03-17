@@ -1,0 +1,43 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RuralLegalAidBot v2 — Docker Compose
+# Requires: Docker >= 20.10, NVIDIA Container Toolkit
+#
+# Start:  docker-compose up --build
+# Stop:   docker-compose down
+# Logs:   docker-compose logs -f
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  rurallegalaidbot:
+    build: .
+    container_name: rural_legal_aid_bot
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    volumes:
+      - ./data/chroma_db:/app/data/chroma_db
+      - ./data/legal_docs:/app/data/legal_docs
+      - ./data/temp:/app/data/temp
+
+    env_file: .env
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
