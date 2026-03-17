@@ -1,31 +1,3 @@
-"""
-main.py
-─────────────────────────────────────────────────────────────────────────────
-RuralLegalAidBot — FastAPI Backend (v2)
-
-Endpoints:
-  GET  /                  → Serve web UI
-  POST /api/chat          → Main chat (voice or text)
-  POST /api/upload_doc    → Upload & index a legal document
-  GET  /api/health        → Health check
-  GET  /api/status        → System status
-
-Pipeline (v2 — simplified):
-  Audio → Whisper STT → Query (any lang)
-  OR Text Input → Query (any lang)
-  ↓
-  gemini_qa.query_legal_bot(query)
-    → Gemini translate to English (for retrieval)
-    → ChromaDB MMR search
-    → FlashRank reranking
-    → Calculator agent (if math detected)
-    → Gemini generate answer in user's language
-    → Web search agent (if needed)
-  ↓
-  MMS-TTS → Telugu audio
-─────────────────────────────────────────────────────────────────────────────
-"""
-
 import logging
 import os
 import shutil
@@ -39,7 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-# ── Logging ───────────────────────────────────────────────────────────────────
+# ── Logging 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
@@ -47,7 +19,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
-# ── Local Modules ─────────────────────────────────────────────────────────────
+# ── Local Modules 
 from modules.config import TEMP_DIR, TEMP_MAX_AGE_SECONDS, ENABLE_WEB_SEARCH, ENABLE_CALCULATOR
 from modules.audio_processing import (
     transcribe_telugu_audio,
@@ -56,13 +28,14 @@ from modules.audio_processing import (
 )
 from modules.doc_extraction import process_uploaded_file, get_supported_extensions
 from modules.gemini_qa import get_qa_chain, query_legal_bot, add_document_to_index
-# main.py
+
+#from modules.qa_system import get_qa_chain, query_legal_bot, add_document_to_index
 
 from modules.audio_processing import _load_whisper, _load_tts
 
 
 
-# ── FastAPI App ───────────────────────────────────────────────────────────────
+# ── FastAPI App 
 app = FastAPI(
     title="RuralLegalAidBot",
     description="Multilingual RAG legal assistant for rural India — Telugu + English",
@@ -76,13 +49,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Templates & Static Files ──────────────────────────────────────────────────
+# ── Templates & Static Files 
 templates = Jinja2Templates(directory="templates")
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=str(TEMP_DIR)), name="audio")
 
 
-# ── Startup ───────────────────────────────────────────────────────────────────
+# ── Startup 
 
 
 @app.on_event("startup")
@@ -101,11 +74,6 @@ async def startup_event():
             "⚠  Gemini not ready. Check GEMINI_API_KEY in .env\n"
             "   Get free key: https://aistudio.google.com/app/apikey"
         )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Routes
-# ─────────────────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_ui(request: Request):
@@ -288,6 +256,6 @@ async def upload_document(file: UploadFile = File(...)):
         Path(file_path).unlink(missing_ok=True)
 
 
-# ── Dev Entry Point ───────────────────────────────────────────────────────────
+# ── Dev Entry Point
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False, log_level="info")
